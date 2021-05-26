@@ -78,6 +78,7 @@ public:
 		return true;
 	}
 
+	
 	void trace(void)
 	{
 		for (auto& [pid, value] : m_pidData)
@@ -151,7 +152,26 @@ public:
 	~tracer() = default;
 
 private:
+	void BlockSyscall()
+	{
+		int blocked = 0;
+		
+		if (is_syscall_blocked(regs.orig_rax)) {
+			blocked = 1;
+			regs.orig_rax = -1; // set to invalid syscall
+			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+		}
 
+		/* Run system call and stop on exit */
+		ptrace(PTRACE_SYSCALL, pid, 0, 0);
+		waitpid(pid, 0, 0);
+
+		if (blocked) {
+			/* errno = EPERM */
+			regs.rax = -EPERM; // Operation not permitted
+			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+		}
+	}
 	bool ReadConfig(FILE* fd)
 	{
 		if (!fd)
