@@ -85,7 +85,7 @@ void dispatch_queue::dispatch_thread_handler(void)
 	} while (!m_quit);
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
 	int r = 0;
 	int val = 3;
@@ -94,7 +94,7 @@ int main(void)
 	dispatch_queue q(3);
 	tracer<int> trace(q);
 
-	bool res = trace.Init(std::string("/configProcs"));
+	bool res = trace.Init(std::string("./config"), argv[1], atoi(argv[2]));
 
 	if (!res)
 	{

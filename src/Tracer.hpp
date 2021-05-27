@@ -52,7 +52,7 @@ public:
 		: m_queue(queue), m_client(), m_configuration()
 	{}
 
-	bool Init(std::string&& configPath)
+	bool Init(std::string&& configPath, const std::string& server_ip, const uint16_t server_port)
 	{
 		m_configuration = ConfigurationReader::read_config(configPath);
 		if (! m_configuration)
@@ -67,7 +67,7 @@ public:
 			return false;
 		}
 
-		if (! m_client.init("127.0.0.1", 1234)) {
+		if (! m_client.init(server_ip, server_port)) {
 			std::cout << "Failed initializing network client" << std::endl;
 			return false;
 		}
