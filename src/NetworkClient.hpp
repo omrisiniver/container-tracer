@@ -1,5 +1,4 @@
-#ifndef _NETWORKCLIENT_
-#define _NETWORKCLIENT_
+#pragma once
 
 #include <string>
 #include <sys/socket.h>
@@ -36,5 +35,3 @@ public:
 private:
     int m_sock;
 };
-
-#endif

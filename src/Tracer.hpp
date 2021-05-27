@@ -1,5 +1,4 @@
-#ifndef _TRACER_
-#define _TRACER_
+#pragma once
 
 #include "ConfigurationReader.hpp"
 #include "NetworkClient.hpp"
@@ -230,6 +229,3 @@ private:
 	network_client m_client;
 	std::unique_ptr<ConfObject> m_configuration;
 };
-
-
-#endif // _TRACER_
