@@ -7,7 +7,7 @@
 
 using json = nlohmann::json;
 
-constexpr char* PROCESSES = "processes";
+constexpr char* PROCESSES        = "processes";
 constexpr char* BLOCKED_SYSCALLS = "blocked_syscalls";
 
 static void runner(const json& obj, std::function<void(const json&)> f) {
@@ -44,6 +44,7 @@ std::unique_ptr<ConfObject> ConfigurationReader::read_config(const std::string& 
     }
 
     auto& ret = *_ret;
+    
     runner(jf[PROCESSES], [&ret](const json& item) {
             if (item.is_string()) {
                 ret.process_names.push_back(item);

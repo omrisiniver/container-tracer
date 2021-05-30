@@ -1,5 +1,4 @@
-#ifndef _DISPATCH_QUEUE_
-#define _DISPATCH_QUEUE_
+#pragma once
 
 #include <cstdint>
 #include <cstdio>
@@ -36,4 +35,3 @@ private:
 	void dispatch_thread_handler(void);
 };
 
-#endif // _DISPATCH_QUEUE_

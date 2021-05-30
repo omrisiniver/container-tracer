@@ -1,5 +1,8 @@
-#ifndef _TRACER_
-#define _TRACER_
+#pragma once
+
+#include "ConfigurationReader.hpp"
+#include "NetworkClient.hpp"
+#include "nholmann/json.hpp"
 
 #include <string>
 #include <iostream>
@@ -46,34 +49,30 @@ class tracer
 {
 public:
 	tracer(dispatch_queue& queue)
-		: m_queue(queue), m_procNames()
+		: m_queue(queue), m_client(), m_configuration()
 	{}
 
-	bool Init(std::string&& configPath)
+	bool Init(std::string&& configPath, const std::string& server_ip, const uint16_t server_port)
 	{
-		FILE* fd = fopen(configPath.data(), "r");
-
-		if (fd == nullptr)
-		{
-			std::cout << "Failed open config file " << configPath.data() << std::endl;
-			sleep(5);
-			Init(std::move(configPath));
-			// return false;
-		}
-
-		if (!ReadConfig(fd))
+		m_configuration = ConfigurationReader::read_config(configPath);
+		if (! m_configuration)
 		{
 			std::cout << "Failed read config file" << std::endl;
 			return false;	
 		}
 
-		if (!ParseProcs())
+		if (! ParseProcs())
 		{
 			std::cout << "Failed parse procs " << std::endl;
 			return false;
 		}
 
-		std::cout << "Success " << m_procNames.size() << std::endl;
+		if (! m_client.init(server_ip, server_port)) {
+			std::cout << "Failed initializing network client" << std::endl;
+			return false;
+		}
+
+		std::cout << "Success " << m_configuration->process_names.size() << std::endl;
 
 		return true;
 	}
@@ -122,13 +121,16 @@ public:
 
 	void handle_job()
 	{
+		using json = nlohmann::json;
+
 		if (WIFEXITED(m_currStatus))
 		{
-			std::cout << "Syscall amount " << m_pidData[m_currPid].syscall.size() << std::endl;
-			for(auto p: m_pidData[m_currPid].syscall)
-			{
-				std::cout << " " << p << " ";
-			}
+			json to_send;
+
+			to_send["pid"] = m_currPid;
+			to_send["syscalls"] = m_pidData[m_currPid].syscall;
+			m_client.send_data(to_send.dump());
+
 			m_pidData.erase(m_currPid);
 			if (m_pidData.empty())
 			{
@@ -151,33 +153,6 @@ public:
 	~tracer() = default;
 
 private:
-
-	bool ReadConfig(FILE* fd)
-	{
-		if (!fd)
-		{
-			return false;
-		}
-
-		size_t counter = 0;
-		int currChar = 0;
-		std::string procName;
-
-		while ((currChar = getc(fd)) && currChar != EOF)
-		{
-			if (currChar == '\n')
-			{
-				m_procNames.push_back(procName);
-				procName.clear();
-				++counter;
-			}
-
-			procName.push_back(currChar);
-		}
-
-		return true;
-	}
-
 	bool ParseProcs()
 	{
 		for (auto& p: fs::directory_iterator("/proc"))
@@ -207,10 +182,10 @@ private:
 			std::cout << currString.data() << "   " << static_cast<int>(converted) << std::endl;
 		}
 
-		if (m_pidData.size() != m_procNames.size())
+		if (m_pidData.size() != m_configuration->process_names.size())
 		{
 			std::cout << "pid " << m_pidData.size() << std::endl;
-			std::cout << "names " << m_procNames.size() << std::endl;
+			std::cout << "names " << m_configuration->process_names.size() << std::endl;
 
 			m_pidData.clear();
 			sleep(5);
@@ -234,7 +209,7 @@ private:
 		const char * const name = strrchr(path, '/') + 1;  
 		std::string s(name);
 
-		for (auto& p: m_procNames)
+		for (auto& p: m_configuration->process_names)
 		{
 			if (p == s)
 			{
@@ -250,9 +225,7 @@ private:
 	struct user_regs_struct m_currRegs;
 	std::queue<Product> m_queue_val;
 	dispatch_queue& m_queue;
-	std::vector<std::string> m_procNames;
 	std::unordered_map<pid_t, ProcMetaData> m_pidData;
+	network_client m_client;
+	std::unique_ptr<ConfObject> m_configuration;
 };
-
-
-#endif // _TRACER_

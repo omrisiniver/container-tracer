@@ -1,10 +1,9 @@
 #include <thread>
 #include <functional>
 #include <vector>
-#import <unistd.h>
+#include <unistd.h>
 #include "DispatchQueue.h"
 #include "Tracer.hpp"
-#include "ConfigurationReader.hpp"
 
 dispatch_queue::dispatch_queue(size_t thread_cnt) :
 	m_threads(thread_cnt)
@@ -86,25 +85,24 @@ void dispatch_queue::dispatch_thread_handler(void)
 	} while (!m_quit);
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
-	// int r = 0;
-	// int val = 3;
-	// int val2 = 5;
+	int r = 0;
+	int val = 3;
+	int val2 = 5;
 
-	// dispatch_queue q(3);
-	// tracer<int> trace(q);
+	dispatch_queue q(3);
+	tracer<int> trace(q);
 
-	// bool res = trace.Init(std::string("/configProcs"));
+	bool res = trace.Init(std::string("./config"), argv[1], atoi(argv[2]));
 
-	// if (!res)
-	// {
-	// 	std::cout << "Failed in main" << std::endl;
-	// }
+	if (!res)
+	{
+		std::cout << "Failed in main" << std::endl;
+	}
 
-	// trace.trace();
+	trace.trace();
 
-	// sleep(2);
-	auto a = ConfigurationReader::read_config("./config");
+	sleep(2);
 	return 0;
 }
