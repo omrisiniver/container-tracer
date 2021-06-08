@@ -87,6 +87,7 @@ public:
 		return true;
 	}
 
+	
 	void trace(void)
 	{
 		for (auto& [pid, value] : m_pidData)
@@ -160,21 +161,30 @@ public:
 		m_pidData[m_currPid].firstEntry = true;
 		m_pidData[m_currPid].counter += 1;
 
-		if (m_pidData[m_currPid].counter >= 25)
-		{
-			json to_send;
-
-			to_send["pid"] = m_currPid;
-			to_send["syscalls"] = m_pidData[m_currPid].syscall;
-			m_client.send_data(to_send.dump());
-
-			m_pidData[m_currPid].clear();
-		}
-	}
-
 	~tracer() = default;
 
 private:
+   void BlockSyscall(struct user_regs_struct& regs)
+	{
+		int blocked = 0;
+		
+		if (is_syscall_blocked(regs.orig_rax)) {
+			blocked = 1;
+			regs.orig_rax = -1; // set to invalid syscall
+			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+		}
+
+		/* Run system call and stop on exit */
+		ptrace(PTRACE_SYSCALL, pid, 0, 0);
+		waitpid(pid, 0, 0);
+
+		if (blocked) {
+			/* errno = EPERM */
+			regs.rax = -EPERM; // Operation not permitted
+			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+		}
+	}
+
 	bool ParseProcs()
 	{
 		for (auto& p: fs::directory_iterator("/proc"))
