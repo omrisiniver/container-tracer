@@ -174,25 +174,19 @@ private:
 
     void BlockSyscall(struct user_regs_struct& regs)
 	{
-		int blocked = 0;
-		
 		if (is_syscall_blocked(regs.orig_rax)) {
 			blocked = 1;
 			regs.orig_rax = -1; // set to invalid syscall
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
-		}
 
-		/* Run system call and stop on exit */
-		ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
-		waitpid(m_currPid, 0, 0);
+			/* Run system call and stop on exit */
+			ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
+			waitpid(m_currPid, 0, 0);
 
-		if (blocked) {
 			/* errno = EPERM */
 			regs.rax = -EPERM; // Operation not permitted
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 		}
-
-		ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
 	}
 
 	bool ParseProcs()
