@@ -191,6 +191,8 @@ private:
 			regs.rax = -EPERM; // Operation not permitted
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 		}
+
+		ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
 	}
 
 	bool ParseProcs()
