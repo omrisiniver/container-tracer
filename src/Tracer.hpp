@@ -175,7 +175,6 @@ private:
     void BlockSyscall(struct user_regs_struct& regs)
 	{
 		if (is_syscall_blocked(regs.orig_rax)) {
-			blocked = 1;
 			regs.orig_rax = -1; // set to invalid syscall
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 
