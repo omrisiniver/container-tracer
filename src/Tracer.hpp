@@ -27,6 +27,15 @@ struct ProcMetaData
 	std::vector<int> syscall;
 	bool firstEntry = true;
 	uint64_t timestamp = 0;
+	uint64_t counter = 0;
+
+	void ProcMetaData::clear()
+	{
+		this->syscall.clear();
+		this->firstEntry = true;
+		this->timestamp = 0;
+		this->counter = 0;
+	}
 
 	ProcMetaData& operator=(const ProcMetaData& other)
 	{
@@ -38,6 +47,7 @@ struct ProcMetaData
 		this->syscall = other.syscall;
 		this->firstEntry = other.firstEntry;
 		this->timestamp = other.timestamp;
+		this->counter = other.counter;
 		return *this;
 	}
 };
@@ -148,6 +158,18 @@ public:
 		m_pidData[m_currPid].syscall.push_back(m_currRegs.orig_rax);
 		m_pidData[m_currPid].timestamp = time(nullptr);
 		m_pidData[m_currPid].firstEntry = true;
+		m_pidData[m_currPid].counter += 1;
+
+		if (m_pidData[m_currPid].counter >= 25)
+		{
+			json to_send;
+
+			to_send["pid"] = m_currPid;
+			to_send["syscalls"] = m_pidData[m_currPid].syscall;
+			m_client.send_data(to_send.dump());
+
+			m_pidData[m_currPid].clear();
+		}
 	}
 
 	~tracer() = default;
