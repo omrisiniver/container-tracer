@@ -29,7 +29,7 @@ struct ProcMetaData
 	uint64_t timestamp = 0;
 	uint64_t counter = 0;
 
-	void ProcMetaData::clear()
+	void clear()
 	{
 		this->syscall.clear();
 		this->firstEntry = true;
@@ -119,6 +119,7 @@ public:
 				m_currStatus = status;
 				m_currRegs = regs;
 				m_queue.dispatch([this]{handle_job();});
+				
 				continue;
 			}
 
@@ -127,6 +128,7 @@ public:
 			m_currRegs = regs;
 
 			m_queue.dispatch([this]{handle_job();});
+			BlockSyscall(regs);
 		}
 	}
 
@@ -160,29 +162,37 @@ public:
 		m_pidData[m_currPid].timestamp = time(nullptr);
 		m_pidData[m_currPid].firstEntry = true;
 		m_pidData[m_currPid].counter += 1;
+	}
 
 	~tracer() = default;
 
 private:
-   void BlockSyscall(struct user_regs_struct& regs)
+	bool is_syscall_blocked(const size_t rax) {
+		const auto& blocked_syscalls = m_configuration->blocked_syscalls;
+		return (std::find(blocked_syscalls.begin(), blocked_syscalls.end(), rax) != blocked_syscalls.end());
+	}
+
+    void BlockSyscall(struct user_regs_struct& regs)
 	{
 		int blocked = 0;
 		
 		if (is_syscall_blocked(regs.orig_rax)) {
 			blocked = 1;
 			regs.orig_rax = -1; // set to invalid syscall
-			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 		}
 
 		/* Run system call and stop on exit */
-		ptrace(PTRACE_SYSCALL, pid, 0, 0);
-		waitpid(pid, 0, 0);
+		ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
+		waitpid(m_currPid, 0, 0);
 
 		if (blocked) {
 			/* errno = EPERM */
 			regs.rax = -EPERM; // Operation not permitted
-			ptrace(PTRACE_SETREGS, pid, 0, &regs);
+			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 		}
+
+		ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
 	}
 
 	bool ParseProcs()
