@@ -152,7 +152,7 @@ public:
 	~tracer() = default;
 
 private:
-	void BlockSyscall()
+	void BlockSyscall(struct user_regs_struct& regs)
 	{
 		int blocked = 0;
 		
