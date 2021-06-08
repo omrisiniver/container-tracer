@@ -5,7 +5,7 @@
 
 struct ConfObject {
     std::vector<std::string> process_names;
-    std::vector<uint16_t> blocked_syscalls;
+    std::vector<uint16_t>    blocked_syscalls;
 };
 
 class ConfigurationReader {
