@@ -7,7 +7,7 @@
 
 class network_client {
 public:
-    bool init(const std::string& ip, const uint16_t port) {
+    bool init(const uint16_t port) {
         m_sock = socket(AF_INET, SOCK_STREAM, 0);
         if (m_sock < 0) {
             return false;
@@ -17,7 +17,7 @@ public:
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
 
-        if (inet_pton(AF_INET, ip.c_str(), &addr.sin_addr) <= 0) {
+        if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0) {
             return false;
         }
 

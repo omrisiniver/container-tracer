@@ -62,7 +62,7 @@ public:
 		: m_queue(queue), m_client(), m_configuration()
 	{}
 
-	bool Init(std::string&& configPath, const std::string& server_ip, const uint16_t server_port)
+	bool Init(std::string&& configPath)
 	{
 		m_configuration = ConfigurationReader::read_config(configPath);
 		if (! m_configuration)
@@ -77,7 +77,7 @@ public:
 			return false;
 		}
 
-		if (! m_client.init(server_ip, server_port)) {
+		if (! m_client.init(m_configuration->port)) {
 			std::cout << "Failed initializing network client" << std::endl;
 			return false;
 		}
@@ -223,7 +223,7 @@ private:
 			std::cout << "names " << m_configuration->process_names.size() << std::endl;
 
 			m_pidData.clear();
-			sleep(5);
+			sleep(1);
 			ParseProcs();
 		}
 

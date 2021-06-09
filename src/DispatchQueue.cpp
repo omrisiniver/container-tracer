@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 	dispatch_queue q(3);
 	tracer<int> trace(q);
 
-	bool res = trace.Init(std::string("./config"), argv[1], atoi(argv[2]));
+	bool res = trace.Init(std::string("./config"));
 
 	if (!res)
 	{

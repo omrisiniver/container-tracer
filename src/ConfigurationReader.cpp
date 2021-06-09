@@ -9,6 +9,8 @@ using json = nlohmann::json;
 
 constexpr char* PROCESSES        = "processes";
 constexpr char* BLOCKED_SYSCALLS = "blocked_syscalls";
+// constexpr char* SERVER_IP        = "server_ip";
+constexpr char* SERVER_PORT      = "server_port";
 
 static void runner(const json& obj, std::function<void(const json&)> f) {
     for (const auto& item : obj) {
@@ -61,6 +63,27 @@ std::unique_ptr<ConfObject> ConfigurationReader::read_config(const std::string& 
         }
 
         ret.blocked_syscalls.push_back(item);
+    });
+
+    // runner(jf[SERVER_IP], [&ret](const json& item) {
+    //     if (item.is_string()) {
+    //         for (auto& c : item)
+    //         {
+    //             ret.ip.push_back(c);
+    //         }    
+    //     }
+    // });
+
+    runner(jf[SERVER_PORT], [&ret](const json& item) {
+        if (! item.is_number_unsigned()) {
+                return;
+        }
+
+        if (item > std::numeric_limits<uint16_t>::max()) {
+                return;
+        }
+
+        ret.port = item;
     });
 
     return _ret;

@@ -1,10 +1,14 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 as builder
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get -y install gcc g++   
+WORKDIR /app
+RUN apt-get update && apt-get -y install gcc g++ cmake make
+COPY . /app
+RUN cmake .
+RUN make tracer
 
-
-COPY tracer /tracer
-COPY run_script.sh /run_script.sh
+FROM scratch
+COPY --from=builder /app/tracer tracer
+COPY docker/run_script.sh /app/run_script.sh
 
 # CMD["/run_script.sh"]
