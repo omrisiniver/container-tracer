@@ -99,6 +99,7 @@ int main(int argc, char** argv)
 	if (!res)
 	{
 		std::cout << "Failed in main" << std::endl;
+		return 1;
 	}
 
 	trace.trace();
