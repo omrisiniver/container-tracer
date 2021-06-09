@@ -71,12 +71,14 @@ public:
 			return false;	
 		}
 
+		std::cout << "ParseProcs " << std::endl;
 		if (! ParseProcs())
 		{
 			std::cout << "Failed parse procs " << std::endl;
 			return false;
 		}
 
+		std::cout << "Inir client" << std::endl;
 		if (! m_client.init(m_configuration->port)) {
 			std::cout << "Failed initializing network client" << std::endl;
 			return false;
@@ -134,6 +136,7 @@ public:
 
 	void handle_job()
 	{
+		std::cout << "Handle job is on " << std::endl;				
 		using json = nlohmann::json;
 
 		if (WIFEXITED(m_currStatus))
@@ -162,6 +165,18 @@ public:
 		m_pidData[m_currPid].timestamp = time(nullptr);
 		m_pidData[m_currPid].firstEntry = true;
 		m_pidData[m_currPid].counter += 1;
+
+		if (m_pidData[m_currPid].counter >= 15)
+		{
+			json to_send;
+
+			to_send["pid"] = m_currPid;
+			to_send["syscalls"] = m_pidData[m_currPid].syscall;
+			m_client.send_data(to_send.dump());
+
+			m_pidData[m_currPid].clear();
+
+		}
 	}
 
 	~tracer() = default;
@@ -219,14 +234,12 @@ private:
 
 		if (m_pidData.size() != m_configuration->process_names.size())
 		{
-			std::cout << "pid " << m_pidData.size() << std::endl;
-			std::cout << "names " << m_configuration->process_names.size() << std::endl;
-
 			m_pidData.clear();
 			sleep(1);
 			ParseProcs();
 		}
 
+		printf("start tracing\n");
 		return true;
 	}
 
