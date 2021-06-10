@@ -8,6 +8,6 @@ int main(int argc, char *argv[])
     while (counter < 40)
     {
         sleep(1);
-        printf("test2 %d\n", counter++);
+        printf("YOU GOT PWNED!!! %d\n", counter++);
     }
 }
