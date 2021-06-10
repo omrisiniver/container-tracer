@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+    server:
+        image: server:latest
+        networks:
+            client-to-server:
+                ipv4_address: 10.0.0.5
+        stdin_open: true # docker run -i
+        tty: true        # docker run -t
+
+    client:
+        image: runner:latest
+        networks:
+            - client-to-server
+
+networks:
+    client-to-server:
+        external: false
+        name: client-to-server
+        ipam:
+            config:
+              - subnet: 10.0.0.0/16

@@ -188,14 +188,14 @@ private:
 
     void BlockSyscall(struct user_regs_struct& regs)
 	{
-		using json = nlohmann::json;
-		json to_send;
-
-		to_send["pid"] = m_currPid;
-		to_send["block_syscall"] = regs.orig_rax;
-		m_client.send_data(to_send.dump());
-
 		if (is_syscall_blocked(regs.orig_rax)) {
+			using json = nlohmann::json;
+			json to_send;
+
+			to_send["pid"] = m_currPid;
+			to_send["block_syscall"] = regs.orig_rax;
+			m_client.send_data(to_send.dump());
+
 			regs.orig_rax = -1; // set to invalid syscall
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
 
