@@ -1,0 +1,3 @@
+{"processes" : ["test", "test2"],
+"blocked_syscalls" : [4, 8],
+"server_port": 4000}
