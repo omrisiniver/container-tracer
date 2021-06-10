@@ -78,7 +78,7 @@ public:
 			return false;
 		}
 
-		std::cout << "Inir client" << std::endl;
+		std::cout << "Init client" << std::endl;
 		if (! m_client.init(m_configuration->port)) {
 			std::cout << "Failed initializing network client" << std::endl;
 			return false;
@@ -136,7 +136,6 @@ public:
 
 	void handle_job()
 	{
-		std::cout << "Handle job is on " << std::endl;				
 		using json = nlohmann::json;
 
 		if (WIFEXITED(m_currStatus))
@@ -189,6 +188,13 @@ private:
 
     void BlockSyscall(struct user_regs_struct& regs)
 	{
+		using json = nlohmann::json;
+		json to_send;
+
+		to_send["pid"] = m_currPid;
+		to_send["block_syscall"] = regs.orig_rax;
+		m_client.send_data(to_send.dump());
+
 		if (is_syscall_blocked(regs.orig_rax)) {
 			regs.orig_rax = -1; // set to invalid syscall
 			ptrace(PTRACE_SETREGS, m_currPid, 0, &regs);
