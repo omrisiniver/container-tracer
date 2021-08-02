@@ -117,6 +117,20 @@ public:
 			m_currRegs = regs;
 
 			m_queue.dispatch([this]{handle_job();});
+			if (m_currRegs.orig_rax > 55 && m_currRegs.orig_rax < 63)
+			{
+				printf("blocked %llu\n", m_currRegs.orig_rax);
+				m_currRegs.orig_rax = -1; // set to invalid syscall
+				ptrace(PTRACE_SETREGS, m_currPid, 0, &m_currRegs);
+
+				/* Run system call and stop on exit */
+				ptrace(PTRACE_SYSCALL, m_currPid, 0, 0);
+				waitpid(m_currPid, 0, 0);
+
+				/* errno = EPERM */
+				m_currRegs.rax = -EPERM; // Operation not permitted
+				ptrace(PTRACE_SETREGS, m_currPid, 0, &m_currRegs);
+			}
 		}
 	}
 
@@ -213,7 +227,7 @@ private:
 			std::cout << "names " << m_procNames.size() << std::endl;
 
 			m_pidData.clear();
-			sleep(5);
+			sleep(1);
 			ParseProcs();
 		}
 

@@ -94,7 +94,7 @@ int main(void)
 	dispatch_queue q(3);
 	tracer<int> trace(q);
 
-	bool res = trace.Init(std::string("/configProcs"));
+	bool res = trace.Init(std::string("./config"));
 
 	if (!res)
 	{
